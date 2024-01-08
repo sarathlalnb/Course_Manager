@@ -4,6 +4,7 @@ import * as yup from "yup";
 import DatePicker from "@mui/lab/DatePicker";
 import TextField from "@mui/material/TextField";
 import { endpoints } from "../../../defaults";
+import { useNavigate } from "react-router-dom";
 import useApi from "../../../hooks/useApi";
 import Toast from "react-bootstrap/Toast";
 import ToastHeader from "react-bootstrap/esm/ToastHeader";
@@ -11,21 +12,20 @@ import ToastBody from "react-bootstrap/esm/ToastBody";
 
 const CoursesOnBoardingForm = (course) => {
   const [edit, setEdit] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [showError, setShowError] = useState(false);
   const { request: updateCourse } = useApi("patch");
+  const navigate = useNavigate();
   useEffect(() => {
     if (course) {
       setEdit(true);
     }
   }, [course]);
   const validationSchema = yup.object({
-    CourseName: yup
-      .string("Enter your email")
-      .email("Enter a valid email")
-      .required("Email is required"),
-    password: yup
-      .string("Enter your password")
-      .min(8, "Password should be of minimum 8 characters length")
-      .required("Password is required"),
+    full_name: yup.string("Enter Details").required("required"),
+    title: yup.string("Enter Details").required("required"),
+    offline_fees: yup.string("Enter Details").required("required"),
+    online_fees: yup.string("Enter Details").required("required"),
   });
 
   const formik = useFormik({
@@ -46,27 +46,28 @@ const CoursesOnBoardingForm = (course) => {
     },
   });
   const handleSave = async () => {
-    let apiResponse;
-    const payload = formik.values;
-    const id = course.result.id;
-    const uri = `${endpoints.UPDATE_COURSE}/${id}`;
-    apiResponse = await updateCourse(uri, payload);
-    const { response, error } = apiResponse;
-    if (!error && response.data) {
-      <span className="d-flex align-items-center">
-        <span>Updated Successfully</span>
-      </span>;
-    } else {
-      const { response: errRes } = error;
-      <Toast>
-        <ToastHeader title="Error" icon="Cancel" iconColor="danger" time="Now">
-          <ToastBody>
-            {errRes?.data?.message || "Error Occured. Please contact Admin !!"}
-          </ToastBody>
-        </ToastHeader>
-      </Toast>;
+    try {
+      let apiResponse;
+      const payload = formik.values;
+      const id = course.result.id;
+      const uri = `${endpoints.UPDATE_COURSE}/${id}/`;
+      apiResponse = await updateCourse(uri, payload);
+      const { response, error } = apiResponse;
+      if (!error && response.data) {
+        setShowSuccess(true);
+        setShowError(false);
+      } else {
+        setShowError(true);
+        setShowSuccess(false);
+      }
+    } catch (error) {
+      console.error("Error occurred during form submission:", error);
+      setShowError(true);
+      setShowSuccess(false);
     }
   };
+
+  const handleCancel = () => navigate("/dashboard");
 
   return (
     <div>
@@ -189,15 +190,32 @@ const CoursesOnBoardingForm = (course) => {
 
         <div className="text-center mt-3">
           <button
-            color="primary"
-            variant="contained"
             type="submit"
-            className="btn btn-success"
+            className="btn btn-success "
+            onClick={handleSave}
           >
             Submit
           </button>
         </div>
       </form>
+      {showSuccess && (
+        <span className="d-flex align-items-center">
+          <span>Saved Successfully</span>
+        </span>
+      )}
+
+      {showError && (
+        <Toast>
+          <ToastHeader
+            title="Error"
+            icon="Cancel"
+            iconColor="danger"
+            time="Now"
+          >
+            <ToastBody>{"Error Occurred. Please contact Admin !!"}</ToastBody>
+          </ToastHeader>
+        </Toast>
+      )}
     </div>
   );
 };

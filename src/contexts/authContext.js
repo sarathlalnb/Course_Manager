@@ -9,25 +9,20 @@ export const AuthContextProvider = ({ children }) => {
   const setCurrentUser = (userData) => {
     const token = userData.token.access;
     localStorage.setItem("token", token);
-    const usr = userData.user.full_name;
+    const usr = userData.user.user_type;
 
     localStorage.setItem("user", usr);
     setUser(usr);
   };
 
   const getCurrentUser = () => {
-    const authToken = localStorage.getItem("token");
+    const authToken = localStorage.getItem("user_type");
     if (user) {
       return user;
     }
-    if (!authToken) {
-      return null;
+    if (authToken) {
+      return authToken;
     }
-    // const usr = authToken ? jwtDecode(authToken) : null;
-    // if (usr) {
-    //   usr.roles = usr.roles !== "" ? usr.roles.replace(" ", "").split(",") : [];
-    // }
-    // return usr;
   };
 
   const loggoff = (callBack) => {

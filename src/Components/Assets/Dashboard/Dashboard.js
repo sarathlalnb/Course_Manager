@@ -1,4 +1,4 @@
-import { React, useState, useEffect } from "react";
+import { React, useState, useEffect, useContext } from "react";
 import { Grid, Card, CardContent, Typography, Button } from "@mui/material";
 import Container from "@mui/material/Container";
 import { endpoints } from "../../../defaults";
@@ -9,6 +9,7 @@ import styled from "styled-components";
 import Toast from "react-bootstrap/Toast";
 import ToastHeader from "react-bootstrap/esm/ToastHeader";
 import ToastBody from "react-bootstrap/esm/ToastBody";
+import AuthContext from "../../../contexts/authContext";
 
 const StyledContainer = styled(Container)`
   padding-top: 50px;
@@ -40,6 +41,17 @@ const Dashboard = () => {
   const [result1, setResult] = useState();
   const { request: getCourses } = useApi("get");
   const navigate = useNavigate();
+  const userType = localStorage.getItem("user");
+  const [isSuperAdmin, setIssuperAdmin] = useState(false);
+  const authContext = useContext(AuthContext);
+  const checkUserType = () => {
+    if (userType === "superadmin") {
+      setIssuperAdmin(true);
+    }
+  };
+  useEffect(() => {
+    checkUserType();
+  }, []);
 
   useEffect(() => {
     if (!dataLoaded) {
@@ -74,7 +86,11 @@ const Dashboard = () => {
   };
 
   const handleCreate = () => navigate("/courseCreate");
-
+  const handleLogout = () => {
+    authContext.loggoff(() => {
+      navigate("/");
+    });
+  };
   return (
     <>
       {showEditForm ? (
@@ -85,12 +101,23 @@ const Dashboard = () => {
             Courses
           </StyledTypography>
           <StyledButtonContainer>
+            {isSuperAdmin && (
+              <button
+                type="submit"
+                className="btn btn-success"
+                onClick={handleCreate}
+              >
+                Create New Course
+              </button>
+            )}
+          </StyledButtonContainer>
+          <StyledButtonContainer>
             <button
               type="submit"
-              class="btn btn-success"
-              onClick={handleCreate}
+              className="btn btn-success"
+              onClick={handleLogout}
             >
-              Create New Course
+              Logout
             </button>
           </StyledButtonContainer>
           <StyledGridContainer container spacing={5} className="p-5  ">

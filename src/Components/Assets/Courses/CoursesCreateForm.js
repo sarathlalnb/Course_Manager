@@ -1,4 +1,4 @@
-import { React } from "react";
+import { React, useState, useEffect } from "react";
 import { useFormik } from "formik";
 import * as yup from "yup";
 import TextField from "@mui/material/TextField";
@@ -8,15 +8,18 @@ import useApi from "../../../hooks/useApi";
 import Toast from "react-bootstrap/Toast";
 import ToastHeader from "react-bootstrap/esm/ToastHeader";
 import ToastBody from "react-bootstrap/esm/ToastBody";
+import { Button } from "@mui/material";
 
 const CoursesCreateForm = () => {
   const { request: createCourses } = useApi("post");
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [showError, setShowError] = useState(false);
 
   const validationSchema = yup.object({
-    CourseName: yup.string("Enter Details").required("required"),
-    CourseTitle: yup.string("Enter Details").required("required"),
-    onlineFees: yup.string("Enter Details").required("required"),
-    offlineFees: yup.string("Enter Details").required("required"),
+    full_name: yup.string("Enter Details").required("required"),
+    title: yup.string("Enter Details").required("required"),
+    offline_fees: yup.string("Enter Details").required("required"),
+    online_fees: yup.string("Enter Details").required("required"),
   });
 
   const formik = useFormik({
@@ -31,29 +34,37 @@ const CoursesCreateForm = () => {
       online_fees: "",
     },
     validationSchema: validationSchema,
-    onSubmit: () => {
-      setTimeout(handleSave, 200);
+    onSubmit: async () => {
+      console.log("ornrkjrh");
+      try {
+        await formik.handleSubmit();
+        setTimeout(handleSave, 200);
+      } catch (error) {
+        console.error("Form submission error:", error);
+      }
     },
   });
 
   const handleSave = async () => {
-    let apiResponse;
-    const payload = formik.values;
-    apiResponse = await createCourses(endpoints.ADD_COURSE, payload);
-    const { response, error } = apiResponse;
-    if (!error && response.data) {
-      <span className="d-flex align-items-center">
-        <span>Saved Successfully</span>
-      </span>;
-    } else {
-      const { response: errRes } = error;
-      <Toast>
-        <ToastHeader title="Error" icon="Cancel" iconColor="danger" time="Now">
-          <ToastBody>
-            {errRes?.data?.message || "Error Occured. Please contact Admin !!"}
-          </ToastBody>
-        </ToastHeader>
-      </Toast>;
+    console.log("jayy");
+    try {
+      let apiResponse;
+      const payload = formik.values;
+
+      apiResponse = await createCourses(endpoints.ADD_COURSE, payload);
+      const { response, error } = apiResponse;
+
+      if (!error && response.data) {
+        setShowSuccess(true);
+        setShowError(false);
+      } else {
+        setShowError(true);
+        setShowSuccess(false);
+      }
+    } catch (error) {
+      console.error("Error occurred during form submission:", error);
+      setShowError(true);
+      setShowSuccess(false);
     }
   };
 
@@ -147,7 +158,7 @@ const CoursesCreateForm = () => {
             style: { color: "grey" },
           }}
         />
-        <DatePicker
+        {/* <DatePicker
           fullWidth
           id="cochin_date"
           name="cochin_date"
@@ -168,19 +179,35 @@ const CoursesCreateForm = () => {
               }}
             />
           )}
-        />
-
+        /> */}
         <div className="text-center mt-3">
           <button
-            color="primary"
-            variant="contained"
             type="submit"
-            className="btn btn-success"
+            className="btn btn-success "
+            onClick={handleSave}
           >
             Submit
           </button>
         </div>
       </form>
+      {showSuccess && (
+        <span className="d-flex align-items-center">
+          <span>Saved Successfully</span>
+        </span>
+      )}
+
+      {showError && (
+        <Toast>
+          <ToastHeader
+            title="Error"
+            icon="Cancel"
+            iconColor="danger"
+            time="Now"
+          >
+            <ToastBody>{"Error Occurred. Please contact Admin !!"}</ToastBody>
+          </ToastHeader>
+        </Toast>
+      )}
     </div>
   );
 };
